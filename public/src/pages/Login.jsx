@@ -1,8 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
 export default function Login() {
+    let cookies = document.cookie;
+    
+    useEffect(() => {
+        if(cookies !== "") window.location.href = '/';
+        // eslint-disable-next-line
+    }, []);
+
     const [ user, setUser ] = useState({
         email: "",
         password: ""

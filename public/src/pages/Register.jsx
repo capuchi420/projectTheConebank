@@ -1,8 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
 
 export default function Register() {
+    let cookies = document.cookie;
+    
+    useEffect(() => {
+        if(cookies !== "") window.location.href = '/';
+        // eslint-disable-next-line
+    }, []);
+
     const [ user, setUser ] = useState({
         username: "",
         email: "",

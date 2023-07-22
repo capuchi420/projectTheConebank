@@ -1,10 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
+import Request from '../components/Request';
+import Review from '../components/Review';
 
 export default function Home() {
+  let cookies = document.cookie;
+  const _id = cookies.slice(cookies.indexOf('=')+1, cookies.length);
+
+  useEffect(() => {
+    if(cookies === "") window.location.href = '/login';
+    // eslint-disable-next-line
+  }, []);
+
+  const [modalInfo, setModalInfo] = useState({
+    toOrFrom: "",
+    amount: 0
+  });
+
+
+
   const [ isTransferOpen, setIsTransferOpen ] = useState(false);
   const [ isModalOpen, setIsModalOpen ] = useState(false);
   const [ isRequestOpen, setIsRequestOpen ] = useState(false);
+
+  const [userInfo, setUserInfo] = useState({});
+  const [requests, setRequests] = useState([]);
+  const [history, setHistory] = useState([]);
+
+  useEffect(() => {
+    fetch(`http://localhost:1234/user/${_id}`).then(response => response.json()).then(data => {
+      setUserInfo(data.user);
+      setRequests(data.user.requests);
+      setHistory(data.user.history);
+    });
+  });
 
   const handleTransferModal = () => {
     setIsTransferOpen(true);
@@ -14,6 +43,10 @@ export default function Home() {
   const handleTransferModalClose = () => {
     setIsTransferOpen(false);
     setIsModalOpen(false);
+    setModalInfo({
+      toOrFrom: "",
+      amount: ""
+    });
   }
 
   const handleRequestModal = () => {
@@ -26,6 +59,22 @@ export default function Home() {
     setIsModalOpen(false);
   }
 
+  console.log(userInfo)
+
+  const handleLogout = () => {
+    document.cookie = "_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC";
+    window.location.href = "/login";
+  }
+
+  const handleChange = (e) => {
+    setModalInfo(data => {
+      return {
+        ...data,
+        [e.target.name]: (e.target.name === "amount" ? +e.target.value : e.target.value)
+      }
+    });
+  }
+
   return (
     <Container className={(isModalOpen ? "open" : "")}>
       <nav>
@@ -34,15 +83,15 @@ export default function Home() {
       <header>
         <div className='content'>
           <div className='info'>
-            <p>username</p>
-            <p>email</p>
-            <p>id</p>
-            <p>+1000$</p>
+            <p>{userInfo.username}</p>
+            <p>{userInfo.email}</p>
+            <p>{_id}</p>
+            <p>{userInfo.balance}$</p>
           </div>
           <div className='options'>
             <button className='transfer' onClick={handleTransferModal}>Transfer</button>
             <button className='request' onClick={handleRequestModal}>Request</button>
-            <button className='logout'>Logout</button>
+            <button className='logout' onClick={handleLogout}>Logout</button>
           </div>
         </div>
       </header>
@@ -50,46 +99,16 @@ export default function Home() {
         <section className='requests'>
           <div className='request-list'>
             <h6>Requests</h6>
-            <div className='request'>
-              <p>username</p>
-              <p className='money'>100$</p>
-              <div className='options'>
-                <button className='accept'>Accept</button>
-                <button className='decline'>Decline</button>
-              </div>
-            </div>
-            <div className='request'>
-              <p>username</p>
-              <p className='money'>100$</p>
-              <div className='options'>
-                <button className='accept'>Accept</button>
-                <button className='decline'>Decline</button>
-              </div>
-            </div>
-            <div className='request'>
-              <p>username</p>
-              <p className='money'>100$</p>
-              <div className='options'>
-                <button className='accept'>Accept</button>
-                <button className='decline'>Decline</button>
-              </div>
-            </div>
+            {requests.map(req => {
+              return <Request {...req} />
+            })}
           </div>
         </section>
         <section className='history'>
           <h6>History</h6>
-          <div className='review'>
-            <p>19. 07. 2023.</p>
-            <p>Sent 100$ to username</p>
-          </div>
-          <div className='review'>
-            <p>19. 07. 2023.</p>
-            <p>Sent 100$ to username</p>
-          </div>
-          <div className='review'>
-            <p>19. 07. 2023.</p>
-            <p>Sent 100$ to username</p>
-          </div>
+          {history.map(his => {
+            return <Review {...his} />
+          })}
         </section>
       </main>
       <footer>
@@ -100,8 +119,8 @@ export default function Home() {
         <div className='background'>
           <div className='modal'>
             <form>
-              <input type="text" placeholder='To' />
-              <input type="text" placeholder='Amount' />
+              <input type="text" placeholder='To (enter ID)' name='toOrFrom' value={modalInfo.toOrFrom} onChange={handleChange} />
+              <input type="number" placeholder='Amount' name='amount' value={modalInfo.amount} onChange={handleChange} />
               <div className='options'>
                 <button type='submit' className='send'>Send</button>
                 <button onClick={handleTransferModalClose} className='exit'>Exit</button>
@@ -115,8 +134,8 @@ export default function Home() {
         <div className='background'>
           <div className='modal'>
             <form>
-              <input type="text" placeholder='From' />
-              <input type="text" placeholder='Amount' />
+              <input type="text" placeholder='From (enter ID)' name='toOrFrom' value={modalInfo.toOrFrom} onChange={handleChange} />
+              <input type="number" placeholder='Amount' name='amount' value={modalInfo.amount} onChange={handleChange} />
               <div className='options'>
                 <button type='submit' className='send'>Request</button>
                 <button onClick={handleRequestModalClose} className='exit'>Exit</button>
