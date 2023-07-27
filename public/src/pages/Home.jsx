@@ -45,7 +45,7 @@ export default function Home() {
     setIsModalOpen(false);
     setModalInfo({
       toOrFrom: "",
-      amount: ""
+      amount: 0
     });
   }
 
@@ -59,8 +59,6 @@ export default function Home() {
     setIsModalOpen(false);
   }
 
-  console.log(userInfo)
-
   const handleLogout = () => {
     document.cookie = "_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC";
     window.location.href = "/login";
@@ -73,6 +71,38 @@ export default function Home() {
         [e.target.name]: (e.target.name === "amount" ? +e.target.value : e.target.value)
       }
     });
+  }
+
+  const handleTransferSubmit = async (e) => {
+    e.preventDefault();
+
+    let info = {
+      _id: _id,
+      toId: modalInfo.toOrFrom,
+      amount: modalInfo.amount
+    };
+
+    fetch('http://localhost:1234/user/transfer', {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(info)
+    }).then(response => response.json()).then()
+  }
+
+  const handleRequestSubmit = async (e) => {
+    e.preventDefault();
+
+    let info  = {
+      _id: _id,
+      toId: modalInfo.toOrFrom,
+      amount: modalInfo.amount
+    };
+
+    fetch('http://localhost:1234/user/request', {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(info)
+    }).then(response => response.json()).then()
   }
 
   return (
@@ -101,14 +131,14 @@ export default function Home() {
             <h6>Requests</h6>
             {requests.map(req => {
               return <Request {...req} />
-            })}
+            }).reverse()}
           </div>
         </section>
         <section className='history'>
           <h6>History</h6>
           {history.map(his => {
             return <Review {...his} />
-          })}
+          }).reverse()}
         </section>
       </main>
       <footer>
@@ -118,12 +148,12 @@ export default function Home() {
       <div className={`modalTransfer `+(isTransferOpen ? 'open' : 'closed')}>
         <div className='background'>
           <div className='modal'>
-            <form>
+            <form onSubmit={handleTransferSubmit}>
               <input type="text" placeholder='To (enter ID)' name='toOrFrom' value={modalInfo.toOrFrom} onChange={handleChange} />
-              <input type="number" placeholder='Amount' name='amount' value={modalInfo.amount} onChange={handleChange} />
+              <input type="number" min={0} placeholder='Amount' name='amount' value={modalInfo.amount} onChange={handleChange} />
               <div className='options'>
                 <button type='submit' className='send'>Send</button>
-                <button onClick={handleTransferModalClose} className='exit'>Exit</button>
+                <button type='button' onClick={handleTransferModalClose} className='exit'>Exit</button>
               </div>
             </form>
           </div>
@@ -133,12 +163,12 @@ export default function Home() {
       <div className={`modalTransfer `+(isRequestOpen ? 'open' : 'closed')}>
         <div className='background'>
           <div className='modal'>
-            <form>
+            <form onSubmit={handleRequestSubmit}>
               <input type="text" placeholder='From (enter ID)' name='toOrFrom' value={modalInfo.toOrFrom} onChange={handleChange} />
-              <input type="number" placeholder='Amount' name='amount' value={modalInfo.amount} onChange={handleChange} />
+              <input type="number" min={0} placeholder='Amount' name='amount' value={modalInfo.amount} onChange={handleChange} />
               <div className='options'>
                 <button type='submit' className='send'>Request</button>
-                <button onClick={handleRequestModalClose} className='exit'>Exit</button>
+                <button type='button' onClick={handleRequestModalClose} className='exit'>Exit</button>
               </div>
             </form>
           </div>

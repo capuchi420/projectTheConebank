@@ -1,5 +1,6 @@
 import { userModel } from "../models/userModel.js";
 import bcrypt from 'bcrypt';
+import { v4 as uuidv4 } from 'uuid';
 
 export const login = async (req, res) => {
     try{
@@ -59,7 +60,139 @@ export const findTheUser = async (req, res) => {
 
 export const transfer = async (req, res) => {
     try{
-        
+        const { _id, toId, amount } = req.body;
+        const fromUser = await userModel.findById(_id);
+        if(fromUser.balance < amount) return res.json({ status: false, msg: "You dont have enough money" });
+
+        const toUser = await userModel.findById(toId);
+        if(!toUser) return res.json({ status: false, msg: "Enter valid user ID" });
+
+        fromUser.balance -= amount;
+        toUser.balance += amount;
+
+        const date = new Date();
+        let day = date.getDate();
+        let month = date.getMonth();
+        let year = date.getFullYear();
+
+        let fromRev = {
+            date: `${day}. ${month}. ${year}.`,
+            msg: `Sent ${amount}$ to ${toUser.username}`
+        };
+
+        fromUser.history.push(fromRev);
+
+        let toRev = {
+            date: `${day}. ${month}. ${year}.`,
+            msg: `Got ${amount}$ from ${fromUser.username}`
+        };
+
+        toUser.history.push(toRev);
+
+        await userModel.replaceOne({ _id: _id }, fromUser);
+        await userModel.replaceOne({ _id: toId }, toUser);
+        res.send({ status: true, fromUser, toUser });
+    }catch(err){
+        res.json({ status: false, err });
+    }
+}
+
+export const request = async (req, res) => {
+    try{
+        const { _id, toId, amount } = req.body;
+        const fromUser = await userModel.findById(_id);
+        //if(fromUser.balance < amount) return res.json({ status: false, msg: "You dont have enough money" });
+
+        const toUser = await userModel.findById(toId);
+        if(!toUser) return res.json({ status: false, msg: "Enter valid user ID" });
+
+        let toRev = {
+            id: uuidv4(),
+            username: `${fromUser.username}`,
+            amount: amount,
+            toId: _id
+        };
+
+        console.log(toUser.requests)
+        console.log('-----------------------------')
+
+        toUser.requests.push(toRev);
+
+        console.log(toUser.requests)
+
+        await userModel.replaceOne({ _id: toId }, toUser);
+        res.send({ status: true, fromUser, toUser });
+    }catch(err){
+        res.json({ status: false, err });
+    }
+}
+
+export const delReq = async (req, res) => {
+    try{
+        const { userId, reqId } = req.body;
+        const user = await userModel.findById(userId);
+
+        let someArr = [];
+
+        for(let i = 0; i < user.requests.length; i++){
+            if(user.requests[i].id !== reqId){
+                someArr.push(user.requests[i]);
+            }
+        }
+
+        user.requests = someArr;
+
+        await userModel.replaceOne({ _id: userId }, user);
+        res.send({ status: true, user });
+    }catch(err){
+        res.json({ status: false, err });
+    }
+}
+
+export const acceptReq = async (req, res) => {
+    try{
+        const { userId, toId, amount, reqId } = req.body;
+        const fromUser = await userModel.findById(userId);
+        if(fromUser.balance < amount) return res.json({ status: false, msg: "You dont have enough money" });
+
+        const toUser = await userModel.findById(toId);
+        if(!toUser) return res.json({ status: false, msg: "Enter valid user ID" });
+
+        fromUser.balance -= amount;
+        toUser.balance += amount;
+
+        const date = new Date();
+        let day = date.getDate();
+        let month = date.getMonth();
+        let year = date.getFullYear();
+
+        let fromRev = {
+            date: `${day}. ${month}. ${year}.`,
+            msg: `Sent ${amount}$ to ${toUser.username}`
+        };
+
+        fromUser.history.push(fromRev);
+
+        let toRev = {
+            date: `${day}. ${month}. ${year}.`,
+            msg: `Got ${amount}$ from ${fromUser.username}`
+        };
+
+        toUser.history.push(toRev);
+
+        let someArr = [];
+
+        for(let i = 0; i < fromUser.requests.length; i++){
+            if(fromUser.requests[i].id !== reqId){
+                someArr.push(fromUser.requests[i]);
+            }
+        }
+
+        fromUser.requests = someArr;
+
+        await userModel.replaceOne({ _id: userId }, fromUser);
+        await userModel.replaceOne({ _id: toId }, toUser);
+        res.send({ status: true, fromUser, toUser });
     }catch(err){
         res.json({ status: false, err });
     }
