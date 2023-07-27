@@ -86,7 +86,14 @@ export default function Home() {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(info)
-    }).then(response => response.json()).then()
+    }).then(response => response.json()).then(data => {
+      setModalInfo({
+        toOrFrom: "",
+        amount: 0
+      });
+      setIsTransferOpen(false);
+      setIsModalOpen(false);
+    })
   }
 
   const handleRequestSubmit = async (e) => {
@@ -102,7 +109,14 @@ export default function Home() {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(info)
-    }).then(response => response.json()).then()
+    }).then(response => response.json()).then(data => {
+      setModalInfo({
+        toOrFrom: "",
+        amount: 0
+      });
+      setIsRequestOpen(false);
+      setIsModalOpen(false);
+    })
   }
 
   return (
